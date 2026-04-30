@@ -66,9 +66,9 @@ def evaluate(model: MLPClassifier, x, y, split_name: str) -> float:
 def main() -> None:
     # ETL.py gives us cleaned train/dev/test text. This script handles TF-IDF.
     x_train_tfidf, x_dev_tfidf, x_test_tfidf, tfidf_vectorizer = build_tfidf_features(
-        ETL.X_train,
-        ETL.X_dev,
-        ETL.X_test,
+        etl.X_train,
+        etl.X_dev,
+        etl.X_test,
         max_features=5000,
     )
 

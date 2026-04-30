@@ -48,7 +48,7 @@ def load_data(filepath: str = "SMSSpamCollection.txt") -> pd.DataFrame:
 
 
 # ── Run it ────────────────────────────────────────────────────────────────────
-df = load_data("SMSSpamCollection.txt")
+df = load_data("data/SMSSpamCollection")
 df.head(5)
 
 

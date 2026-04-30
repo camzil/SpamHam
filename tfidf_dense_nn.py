@@ -1,34 +1,37 @@
 import pickle
 
-from sklearn.feature_extraction.text import TfidfVectorizer
+import numpy as np
+import scipy.sparse as sp
 from sklearn.metrics import classification_report, confusion_matrix, f1_score
 from sklearn.neural_network import MLPClassifier
-
-import etl
 
 
 RANDOM_STATE = 42
 
 
-def build_tfidf_features(x_train, x_dev, x_test, max_features: int = 5000):
-    """Turn the cleaned etl text into TF-IDF feature matrices."""
-    vectorizer = TfidfVectorizer(
-        max_features=max_features,
-        ngram_range=(1, 2),
-        sublinear_tf=True,
-        strip_accents="unicode",
-    )
+def load_tfidf_files():
+    """
+    Load the TF-IDF files that were already created by the ETL notebook/script.
+    This file does not import etl.py or use the Logistic Regression sanity check.
+    """
+    X_train = sp.load_npz("X_train_tfidf.npz")
+    X_dev = sp.load_npz("X_dev_tfidf.npz")
+    X_test = sp.load_npz("X_test_tfidf.npz")
 
-    x_train_tfidf = vectorizer.fit_transform(x_train)
-    x_dev_tfidf = vectorizer.transform(x_dev)
-    x_test_tfidf = vectorizer.transform(x_test)
+    y_train = np.load("y_train.npy")
+    y_dev = np.load("y_dev.npy")
+    y_test = np.load("y_test.npy")
 
-    print(f"TF-IDF train shape: {x_train_tfidf.shape}")
-    return x_train_tfidf, x_dev_tfidf, x_test_tfidf, vectorizer
+    print("Loaded saved TF-IDF data:")
+    print(f"  Train: {X_train.shape}")
+    print(f"  Dev:   {X_dev.shape}")
+    print(f"  Test:  {X_test.shape}")
+
+    return X_train, X_dev, X_test, y_train, y_dev, y_test
 
 
 def build_dense_nn(hidden_units: int = 64) -> MLPClassifier:
-    """Build a dense neural network for TF-IDF features."""
+    """Build a small neural network for the saved TF-IDF features."""
     return MLPClassifier(
         hidden_layer_sizes=(hidden_units,),
         activation="relu",
@@ -37,7 +40,7 @@ def build_dense_nn(hidden_units: int = 64) -> MLPClassifier:
         batch_size=64,
         learning_rate_init=0.001,
         max_iter=80,
-        #prevent overfitting
+        # This helps stop the model before it starts memorizing the training set.
         early_stopping=True,
         validation_fraction=0.15,
         n_iter_no_change=8,
@@ -45,9 +48,9 @@ def build_dense_nn(hidden_units: int = 64) -> MLPClassifier:
     )
 
 
-def evaluate(model: MLPClassifier, x, y, split_name: str) -> float:
-    """Print the main evaluation numbers, especially spam F1."""
-    y_pred = model.predict(x)
+def evaluate(model: MLPClassifier, X, y, split_name: str) -> float:
+    """Print the main evaluation numbers for one split."""
+    y_pred = model.predict(X)
     spam_f1 = f1_score(y, y_pred, pos_label=1)
 
     print("=" * 58)
@@ -64,37 +67,23 @@ def evaluate(model: MLPClassifier, x, y, split_name: str) -> float:
 
 
 def main() -> None:
-    # etl.py gives us cleaned train/dev/test text. This script handles TF-IDF.
-    x_train_tfidf, x_dev_tfidf, x_test_tfidf, tfidf_vectorizer = build_tfidf_features(
-        etl.X_train,
-        etl.X_dev,
-        etl.X_test,
-        max_features=5000,
-    )
+    X_train, X_dev, X_test, y_train, y_dev, y_test = load_tfidf_files()
 
     model = build_dense_nn(hidden_units=64)
 
-    print("Training dense neural network on TF-IDF features...")
-    model.fit(x_train_tfidf, etl.y_train)
+    print("\nTraining dense neural network on saved TF-IDF features...")
+    model.fit(X_train, y_train)
     print("Training complete.\n")
 
-    # Dev is for checking the model while still experimenting.
-    evaluate(model, x_dev_tfidf, etl.y_dev, "Dev")
+    evaluate(model, X_dev, y_dev, "Dev")
 
-    # Test is the final held-out evaluation.
     print("Final held-out test evaluation:")
-    evaluate(model, x_test_tfidf, etl.y_test, "Test")
+    evaluate(model, X_test, y_test, "Test")
 
     with open("tfidf_dense_nn.pkl", "wb") as model_file:
-        pickle.dump(
-            {
-                "model": model,
-                "tfidf_vectorizer": tfidf_vectorizer,
-                "label_encoder": etl.label_encoder,
-            },
-            model_file,
-        )
-    print("Saved trained model, TF-IDF vectorizer, and label encoder to tfidf_dense_nn.pkl")
+        pickle.dump(model, model_file)
+
+    print("Saved trained neural network to tfidf_dense_nn.pkl")
 
 
 if __name__ == "__main__":

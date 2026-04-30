@@ -12,8 +12,6 @@ import pandas as pd
 import numpy as np
 import string
 import re
-get_ipython().system('pip install pandas scikit-learn nltk gensim sentence-transformers')
-
 
 # Download required NLTK data (only needed once — safe to re-run)
 for pkg in ["stopwords", "punkt", "punkt_tab", "wordnet"]:

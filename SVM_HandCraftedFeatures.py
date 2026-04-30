@@ -9,8 +9,10 @@ from sklearn.metrics import classification_report, accuracy_score
 
 
 # load the dataset
-df = pd.read_csv("SMSSpamCollection", sep="\t", header=None,
+df = pd.read_csv("data/SMSSpamCollection", sep="\t", header=None,
                  names=["label", "message"], encoding="latin-1")
+#print(df.head(20))
+#print(df["message"][15])
 # remove duplicates and create binary label
 df = df.drop_duplicates().reset_index(drop=True)
 # create binary label: 1 for spam, 0 for ham

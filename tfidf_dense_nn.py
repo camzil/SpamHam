@@ -11,7 +11,7 @@ RANDOM_STATE = 42
 
 
 def build_tfidf_features(x_train, x_dev, x_test, max_features: int = 5000):
-    """Turn the cleaned ETL text into TF-IDF feature matrices."""
+    """Turn the cleaned etl text into TF-IDF feature matrices."""
     vectorizer = TfidfVectorizer(
         max_features=max_features,
         ngram_range=(1, 2),
@@ -64,7 +64,7 @@ def evaluate(model: MLPClassifier, x, y, split_name: str) -> float:
 
 
 def main() -> None:
-    # ETL.py gives us cleaned train/dev/test text. This script handles TF-IDF.
+    # etl.py gives us cleaned train/dev/test text. This script handles TF-IDF.
     x_train_tfidf, x_dev_tfidf, x_test_tfidf, tfidf_vectorizer = build_tfidf_features(
         etl.X_train,
         etl.X_dev,
@@ -75,22 +75,22 @@ def main() -> None:
     model = build_dense_nn(hidden_units=64)
 
     print("Training dense neural network on TF-IDF features...")
-    model.fit(x_train_tfidf, ETL.y_train)
+    model.fit(x_train_tfidf, etl.y_train)
     print("Training complete.\n")
 
     # Dev is for checking the model while still experimenting.
-    evaluate(model, x_dev_tfidf, ETL.y_dev, "Dev")
+    evaluate(model, x_dev_tfidf, etl.y_dev, "Dev")
 
     # Test is the final held-out evaluation.
     print("Final held-out test evaluation:")
-    evaluate(model, x_test_tfidf, ETL.y_test, "Test")
+    evaluate(model, x_test_tfidf, etl.y_test, "Test")
 
     with open("tfidf_dense_nn.pkl", "wb") as model_file:
         pickle.dump(
             {
                 "model": model,
                 "tfidf_vectorizer": tfidf_vectorizer,
-                "label_encoder": ETL.label_encoder,
+                "label_encoder": etl.label_encoder,
             },
             model_file,
         )

@@ -4,7 +4,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import classification_report, confusion_matrix, f1_score
 from sklearn.neural_network import MLPClassifier
 
-import ETL
+import etl
 
 
 RANDOM_STATE = 42
